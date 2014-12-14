@@ -75,8 +75,29 @@ class API extends REST {
         $this->response('', 204); // If no records "No Content" status
     }
 
+
     
-    
+    //User API
+      private function User() {
+        if ($this->get_request_method() != "GET") {
+            $this->response('', 406);
+        }
+        $query = "SELECT user.Id as UserId, user.EPF, user.Name as UserName,department.Id as DepartmentId,department.DepartmentName"	
+." FROM user"
+." INNER JOIN department ON"
+." user.departmentId=department.Id";
+
+        $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+
+        if ($r->num_rows > 0) {
+            $result = array();
+            while ($row = $r->fetch_assoc()) {
+                $result[] = $row;
+            }
+            $this->response($this->json($result), 200); // send user details
+        }
+        $this->response('', 204); // If no records "No Content" status
+    }
     
     /*
      * 	Encode array into JSON
