@@ -39,8 +39,6 @@ class API extends REST {
             $this->response('', 404); // If the method not exist with in this class "Page not found".
     }
 
-    
-    
     //Department API
     private function department() {
         if ($this->get_request_method() != "GET") {
@@ -75,17 +73,15 @@ class API extends REST {
         $this->response('', 204); // If no records "No Content" status
     }
 
-
-    
     //User API
-      private function User() {
+    private function User() {
         if ($this->get_request_method() != "GET") {
             $this->response('', 406);
         }
-        $query = "SELECT user.Id as UserId, user.EPF, user.Name as UserName,department.Id as DepartmentId,department.DepartmentName"	
-." FROM user"
-." INNER JOIN department ON"
-." user.departmentId=department.Id";
+        $query = "SELECT user.Id as UserId, user.EPF, user.Name as UserName,department.Id as DepartmentId,department.DepartmentName"
+                . " FROM user"
+                . " INNER JOIN department ON"
+                . " user.departmentId=department.Id";
 
         $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
 
@@ -98,7 +94,31 @@ class API extends REST {
         }
         $this->response('', 204); // If no records "No Content" status
     }
-    
+
+    private function UserInsert() {
+        $user = json_decode(file_get_contents("php://input"), true);
+        $column_names = array('EPF', 'Name', 'DepartmentId', 'UserName');
+        $keys = array_keys($user);
+        $columns = '';
+        $values = '';
+        foreach ($column_names as $desired_key) { // Check the customer received. If blank insert blank into the array.
+            if (!in_array($desired_key, $keys)) {
+                $$desired_key = '';
+            } else {
+                $$desired_key = $user[$desired_key];
+            }
+            $columns = $columns . $desired_key . ',';
+            $values = $values . "'" . $$desired_key . "',";
+        }
+        $query = "INSERT INTO user(" . trim($columns, ',') . ") VALUES(" . trim($values, ',') . ")";
+        if (!empty($user)) {
+            $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+            $success = array('status' => "Success", "msg" => "User Created Successfully.", "data" => $user);
+            $this->response($this->json($success), 200);
+        } else
+            $this->response('', 204); //"No Content" status
+    }
+
     /*
      * 	Encode array into JSON
      */
