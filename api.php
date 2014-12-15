@@ -39,12 +39,13 @@ class API extends REST {
             $this->response('', 404); // If the method not exist with in this class "Page not found".
     }
 
+    
     //Department API
-    private function department() {
+    private function Department() {
         if ($this->get_request_method() != "GET") {
             $this->response('', 406);
         }
-        $query = "SELECT *FROM department";
+        $query = "SELECT *FROM department WHERE StatusId =1 ";
         $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
 
         if ($r->num_rows > 0) {
@@ -57,7 +58,7 @@ class API extends REST {
         $this->response('', 204); // If no records "No Content" status
     }
 
-    private function departmentId() {
+    private function DepartmentId() {
         if ($this->get_request_method() != "GET") {
             $this->response('', 406);
         }
@@ -106,6 +107,51 @@ class API extends REST {
       
         }
 
+    private function DepartmentDelete() {
+
+        if ($this->get_request_method() != "POST") {
+            $this->response('', 406);
+        }
+        $department = json_decode(file_get_contents("php://input"), true);
+        $id = (int) $department['Id'];
+
+        $query = "UPDATE department set StatusId = 3 WHERE Id = $id";
+        if (!empty($department)) {
+            $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+            $success = array('status' => "Success", "msg" => "Department Delete Successfully.", "data" => $department);
+            $this->response($this->json($success), 200);
+        } else
+            $this->response('', 204); //"No Content" status
+    }
+   
+    private function DepartmentUpdate() {
+
+        if ($this->get_request_method() != "POST") {
+            $this->response('', 406);
+        }
+        $department = json_decode(file_get_contents("php://input"), true);
+        $id = (int) $department['Id'];
+        $column_names = array('DepartmentName','ModifyDate', 'ModifyUserId');
+        $keys = array_keys($department['department']);
+        $columns = '';
+        $values = '';
+        foreach ($column_names as $desired_key) { // Check the customer received. If key does not exist, insert blank into the array.
+            if (!in_array($desired_key, $keys)) {
+                $$desired_key = '';
+            } else {
+                $$desired_key = $department['department'][$desired_key];
+            }
+            $columns = $columns . $desired_key . "='" . $$desired_key . "',";
+        }
+        $query = "UPDATE department SET " . trim($columns, ',') . " WHERE Id=$id";
+        if (!empty($department)) {
+            $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+            $success = array('status' => "Success", "msg" => "Employee " . $id . " Updated Successfully.", "data" => $department);
+            $this->response($this->json($success), 200);
+        } else
+            $this->response('', 204); // "No Content" status
+    }
+    
     //User API
     private function User() {
         if ($this->get_request_method() != "GET") {
