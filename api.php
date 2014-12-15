@@ -10,7 +10,6 @@ class API extends REST {
     const DB_USER = "root";
     const DB_PASSWORD = "bingodin";
     const DB = "kaizen";
-
     private $db = NULL;
     private $mysqli = NULL;
 
