@@ -73,15 +73,49 @@ class API extends REST {
         $this->response('', 204); // If no records "No Content" status
     }
 
+    private function DepartmentInsert() {
+
+        if ($this->get_request_method() != "POST") {
+            $this->response('', 406);
+        }
+        $department = json_decode(file_get_contents("php://input"), true);
+        $column_names = array('DepartmentName', 'StatusId', 'CreateDate', 'CreateUserId', 'ModifyDate', 'ModifyUserId');
+        $keys = array_keys($department);
+        $columns = '';
+        $values = '';
+        //$this->response($this->json($department), 200);
+        
+        
+        foreach ($column_names as $desired_key) { // Check the Department received. If blank insert blank into the array.
+            if (!in_array($desired_key, $keys)) {
+                $$desired_key = '';
+            } else {
+                $$desired_key = $department[$desired_key];
+            }
+            $columns = $columns . $desired_key . ',';
+            $values = $values . "'" . $$desired_key . "',";
+        }
+        $query = "INSERT INTO department(" . trim($columns, ',') . ") VALUES(" . trim($values, ',') . ")";
+        if (!empty($department)) {
+            $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+            $success = array('status' => "Success", "msg" => "Department Created Successfully.", "data" => $department);
+            $this->response($this->json($success), 200);
+        } else
+            $this->response('', 204); //"No Content" status
+    
+      
+        }
+
     //User API
     private function User() {
         if ($this->get_request_method() != "GET") {
             $this->response('', 406);
         }
-        $query = "SELECT user.Id as UserId, user.EPF, user.Name as UserName,department.Id as DepartmentId,department.DepartmentName"
+        $query = "SELECT user.Id as UserId, user.EPF, user.Name as EMPName,user.UserName,department.Id as DepartmentId,department.DepartmentName"
                 . " FROM user"
                 . " INNER JOIN department ON"
-                . " user.departmentId=department.Id";
+                . " user.departmentId=department.Id"
+                . " where user.StatusId =1";
 
         $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
 
@@ -96,8 +130,12 @@ class API extends REST {
     }
 
     private function UserInsert() {
+
+        if ($this->get_request_method() != "POST") {
+            $this->response('', 406);
+        }
         $user = json_decode(file_get_contents("php://input"), true);
-        $column_names = array('EPF', 'Name', 'DepartmentId', 'UserName');
+        $column_names = array('EPF', 'Name', 'DepartmentId', 'UserName', 'StatusId', 'CreateDate', 'CreateUserId', 'ModifyDate', 'ModifyUserId');
         $keys = array_keys($user);
         $columns = '';
         $values = '';
@@ -117,6 +155,51 @@ class API extends REST {
             $this->response($this->json($success), 200);
         } else
             $this->response('', 204); //"No Content" status
+    }
+
+    private function UserDelete() {
+
+        if ($this->get_request_method() != "POST") {
+            $this->response('', 406);
+        }
+        $user = json_decode(file_get_contents("php://input"), true);
+        $id = (int) $user['Id'];
+
+        $query = "UPDATE user set StatusId = 3 WHERE 	Id = $id";
+        if (!empty($user)) {
+            $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+            $success = array('status' => "Success", "msg" => "User Delete Successfully.", "data" => $user);
+            $this->response($this->json($success), 200);
+        } else
+            $this->response('', 204); //"No Content" status
+    }
+
+    private function UserUpdate() {
+
+        if ($this->get_request_method() != "POST") {
+            $this->response('', 406);
+        }
+        $user = json_decode(file_get_contents("php://input"), true);
+        $id = (int) $user['Id'];
+        $column_names = array('EPF', 'Name', 'UserName', 'DepartmentId', 'ModifyDate', 'ModifyUserId');
+        $keys = array_keys($user['user']);
+        $columns = '';
+        $values = '';
+        foreach ($column_names as $desired_key) { // Check the customer received. If key does not exist, insert blank into the array.
+            if (!in_array($desired_key, $keys)) {
+                $$desired_key = '';
+            } else {
+                $$desired_key = $user['user'][$desired_key];
+            }
+            $columns = $columns . $desired_key . "='" . $$desired_key . "',";
+        }
+        $query = "UPDATE user SET " . trim($columns, ',') . " WHERE Id=$id";
+        if (!empty($user)) {
+            $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+            $success = array('status' => "Success", "msg" => "Employee " . $id . " Updated Successfully.", "data" => $user);
+            $this->response($this->json($success), 200);
+        } else
+            $this->response('', 204); // "No Content" status
     }
 
     /*
