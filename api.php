@@ -246,6 +246,57 @@ class API extends REST {
         } else
             $this->response('', 204); // "No Content" status
     }
+    
+    
+     //Kiazan Cout API
+    
+    
+        private function KiazanCoutInsert() {
+
+        if ($this->get_request_method() != "POST") {
+            $this->response('', 406);
+        }
+        $kiazanCout= json_decode(file_get_contents("php://input"), true);
+        $column_names = array('YearId', 'MonthId', 'DepartmentId', 'KaizenCount', 'StatusId', 'CreateDate', 'CreateUserId', 'ModifyDate', 'ModifyUserId');
+        $keys = array_keys($kiazanCout);
+        $columns = '';
+        $values = '';
+        foreach ($column_names as $desired_key) { // Check the customer received. If blank insert blank into the array.
+            if (!in_array($desired_key, $keys)) {
+                $$desired_key = '';
+            } else {
+                $$desired_key = $kiazanCout[$desired_key];
+            }
+            $columns = $columns . $desired_key . ',';
+            $values = $values . "'" . $$desired_key . "',";
+        }
+        $query = "INSERT INTO kaizencount(" . trim($columns, ',') . ") VALUES(" . trim($values, ',') . ")";
+        if (!empty($kiazanCout)) {
+            $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+            $success = array('status' => "Success", "msg" => "Kaizen Count Record Created Successfully.", "data" => $kiazanCout);
+            $this->response($this->json($success), 200);
+        } else
+            $this->response('', 204); //"No Content" status
+    }
+    
+        private function KiazanCout() {
+        if ($this->get_request_method() != "GET") {
+            $this->response('', 406);
+        }
+        $query = "SELECT * from vkaizencount_s";
+
+        $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+
+        if ($r->num_rows > 0) {
+            $result = array();
+            while ($row = $r->fetch_assoc()) {
+                $result[] = $row;
+            }
+            $this->response($this->json($result), 200); // send user details
+        }
+        $this->response('', 204); // If no records "No Content" status
+    }
+
 
     /*
      * 	Encode array into JSON
