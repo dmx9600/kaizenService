@@ -5,7 +5,6 @@ require_once("Rest.inc.php");
 class API extends REST {
 
     public $data = "";
-
     const DB_SERVER = "localhost";
     const DB_USER = "root";
     const DB_PASSWORD = "bingodin";
