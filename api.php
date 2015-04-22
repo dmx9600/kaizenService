@@ -247,8 +247,7 @@ class API extends REST {
     }
     
     
-     //Kiazan Cout API
-    
+     //Kiazan Cout API   
     
         private function KiazanCoutInsert() {
 
@@ -297,6 +296,78 @@ class API extends REST {
     }
 
 
+    
+    // Suggestion
+    
+      private function  SuggestionMaxId() {
+       if ($this->get_request_method() != "GET") {
+            $this->response('', 406);
+        }
+        $query = "SELECT MAX(Id) as max FROM suggestion";
+        $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+
+        if ($r->num_rows > 0) {
+            $result = array();
+            while ($row = $r->fetch_assoc()) {
+                $result[] = $row;
+            }
+           
+            $this->response($this->json($result), 200); // send user details
+        }
+       // $this->response('', 204); // If no records "No Content" status
+    }
+    
+        private function  Suggestion() {
+        if ($this->get_request_method() != "GET") {
+            $this->response('', 406);
+        }
+        $query = "SELECT *FROM vsuggestion_s";
+        $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+
+        if ($r->num_rows > 0) {
+            $result = array();
+            while ($row = $r->fetch_assoc()) {
+                $result[] = $row;
+            }
+            $this->response($this->json($result), 200); // send user details
+        }
+        $this->response('', 204); // If no records "No Content" status
+    }
+    
+    
+         private function  SuggestionInsert() {
+        if ($this->get_request_method() != "POST") {
+            $this->response('', 406);
+        }
+        $suggestion= json_decode(file_get_contents("php://input"), true);
+        $column_names = array('SuggestionNo','Date', 'ProposerId', 'KaizenStatusId', 'Suggestion', 'Comment');
+        $keys = array_keys($suggestion);
+        $columns = '';
+        $values = '';
+        
+        foreach ($column_names as $desired_key) { // Check the customer received. If blank insert blank into the array.
+            if (!in_array($desired_key, $keys)) {
+                $$desired_key = '';
+            } else {
+                $$desired_key = $suggestion[$desired_key];
+            }
+            $columns = $columns . $desired_key . ',';
+            $values = $values . "'" . $$desired_key . "',";
+        }
+         $query = "INSERT INTO suggestion(" . trim($columns, ',') . ") VALUES(" . trim($values, ',') . ")";
+       // $query = "INSERT INTO suggestion(" . trim($columns, ',') . ") VALUES(," . trim($values, ',') . ")";
+        if (!empty($suggestion)) {
+            $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+            $success = array('status' => "Success", "msg" => "Suggestion Record Created Successfully.", "data" => $suggestion);
+            $this->response($this->json($success), 200);
+        } else
+            $this->response('', 204); //"No Content" status
+    }
+    
+    
+    
+    
+    
     /*
      * 	Encode array into JSON
      */
