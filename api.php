@@ -247,8 +247,7 @@ class API extends REST {
     }
     
     
-     //Kiazan Cout API   
-    
+     //Kiazan Cout API    
         private function KiazanCoutInsert() {
 
         if ($this->get_request_method() != "POST") {
@@ -277,7 +276,7 @@ class API extends REST {
             $this->response('', 204); //"No Content" status
     }
     
-        private function KiazanCout() {
+    private function KiazanCout() {
         if ($this->get_request_method() != "GET") {
             $this->response('', 406);
         }
@@ -297,8 +296,7 @@ class API extends REST {
 
 
     
-    // Suggestion
-    
+    // Suggestion    
       private function  SuggestionMaxId() {
        if ($this->get_request_method() != "GET") {
             $this->response('', 406);
@@ -312,6 +310,22 @@ class API extends REST {
                 $result[] = $row;
             }
            
+            $this->response($this->json($result), 200); // send user details
+        }
+       // $this->response('', 204); // If no records "No Content" status
+    }
+    
+    private function  KaizenMaxId() {
+       if ($this->get_request_method() != "GET") {
+            $this->response('', 406);
+        }
+        $query = "SELECT MAX(Id) as max FROM kaizen";
+        $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+        if ($r->num_rows > 0) {
+            $result = array();
+            while ($row = $r->fetch_assoc()) {
+                $result[] = $row;
+            }           
             $this->response($this->json($result), 200); // send user details
         }
        // $this->response('', 204); // If no records "No Content" status
@@ -365,8 +379,21 @@ class API extends REST {
     }
     
     
-    
-    
+        private function  Proposer() {
+        if ($this->get_request_method() != "GET") {
+            $this->response('', 406);
+        }
+        $query = "SELECT *FROM User";
+        $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+        if ($r->num_rows > 0) {
+            $result = array();
+            while ($row = $r->fetch_assoc()) {
+                $result[] = $row;
+            }
+            $this->response($this->json($result), 200); // send user details
+        }
+        $this->response('', 204); // If no records "No Content" status
+    }
     
     /*
      * 	Encode array into JSON
