@@ -292,6 +292,62 @@ class API extends REST {
         $this->response('', 204); // If no records "No Content" status
     }
 
+    private function KiazanInsert() {
+
+        if ($this->get_request_method() != "POST") {
+            $this->response('', 406);
+        }
+        $kiazan = json_decode(file_get_contents("php://input"), true);
+        $column_names = array('KaizanNo', 'Date', 'ProposerId   ', 'ResponsibleId', 'KaizenStatusId', 'Suggestion', 'DepartmentId', 'BenefitsId', 'CostSaving', 'TimeImprovement', 'Comment');
+        $keys = array_keys($kiazan);
+        $columns = '';
+        $values = '';
+        foreach ($column_names as $desired_key) { // Check the customer received. If blank insert blank into the array.
+            if (!in_array($desired_key, $keys)) {
+                $$desired_key = '';
+            } else {
+                $$desired_key = $kiazan[$desired_key];
+            }
+            $columns = $columns . $desired_key . ',';
+            $values = $values . "'" . $$desired_key . "',";
+        }
+        $query = "INSERT INTO kaizen(" . trim($columns, ',') . ") VALUES(" . trim($values, ',') . ")";
+        if (!empty($kiazan)) {
+            $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+            $success = array('status' => "Success", "msg" => "Kaizen Count Record Created Successfully.", "data" => $kiazan);
+            $this->response($this->json($success), 200);
+        } else
+            $this->response('', 204); //"No Content" status
+    }
+
+    private function BenefitsInsert() {
+
+        if ($this->get_request_method() != "POST") {
+            $this->response('', 406);
+        }
+        $benefits = json_decode(file_get_contents("php://input"), true);
+        $column_names = array('Safety', 'Quality', 'Delivery   ', 'Cost', 'Morale', 'Environment', '6S', 'Productivity');
+        $keys = array_keys($benefits);
+        $columns = '';
+        $values = '';
+        foreach ($column_names as $desired_key) { // Check the customer received. If blank insert blank into the array.
+            if (!in_array($desired_key, $keys)) {
+                $$desired_key = '';
+            } else {
+                $$desired_key = $benefits[$desired_key];
+            }
+            $columns = $columns . $desired_key . ',';
+            $values = $values . "'" . $$desired_key . "',";
+        }
+        $query = "INSERT INTO benefits(" . trim($columns, ',') . ") VALUES(" . trim($values, ',') . ")";
+        if (!empty($benefits)) {
+            $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+            $success = array('status' => "Success", "msg" => "Kaizen Count Record Created Successfully.", "data" => $benefits);
+            $this->response($this->json($success), 200);
+        } else
+            $this->response('', 204); //"No Content" status
+    }
+
     // Suggestion    
     private function SuggestionMaxId() {
         if ($this->get_request_method() != "GET") {
@@ -333,22 +389,20 @@ class API extends REST {
         }
         $MonthId = (int) $this->_request['MonthId'];
         $KaizenStatus = (int) $this->_request['KaizenStatus'];
-        
-       $query = "SELECT *FROM vsuggestion_s";
-        
-        if(($MonthId == Null || $MonthId == 0 || $MonthId == "" || $MonthId == "")&&($KaizenStatus == Null || $KaizenStatus == 0 || $KaizenStatus == "" || $KaizenStatus == "")){
-              $query = "SELECT *FROM vsuggestion_s";
-        }else{
-            if($MonthId !=0 & $KaizenStatus != 0){
-                 $query = $query." WHERE MonthId =".$MonthId." and KaizenStatusId =".$KaizenStatus;
+
+        $query = "SELECT *FROM vsuggestion_s";
+
+        if (($MonthId == Null || $MonthId == 0 || $MonthId == "" || $MonthId == "") && ($KaizenStatus == Null || $KaizenStatus == 0 || $KaizenStatus == "" || $KaizenStatus == "")) {
+            $query = "SELECT *FROM vsuggestion_s";
+        } else {
+            if ($MonthId != 0 & $KaizenStatus != 0) {
+                $query = $query . " WHERE MonthId =" . $MonthId . " and KaizenStatusId =" . $KaizenStatus;
+            } else {
+                
             }
-            else {
-               
-            }
-           
         }
-       //echo $query;
-      
+        //echo $query;
+
         $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
 
         if ($r->num_rows > 0) {
@@ -390,7 +444,25 @@ class API extends REST {
             $this->response('', 204); //"No Content" status
     }
 
-    private function SuggestionUpdate() {
+    private function SuggestionApproval() {
+
+        if ($this->get_request_method() != "POST") {
+            $this->response('', 406);
+        }
+        $suggestion = json_decode(file_get_contents("php://input"), true);
+        
+        $id = (int) $suggestion['Id'];
+        $approval = (int) $suggestion['Approval'];
+        $query = "UPDATE suggestion SET KaizenStatusId = $approval WHERE Id=$id";
+        if (!empty($suggestion)) {
+            $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+            $success = array('status' => "Success", "msg" => "Suggestion " . $id . " Updated Successfully.", "data" => $suggestion);
+            $this->response($this->json($success), 200);
+        } else
+            $this->response('', 204); // "No Content" status
+    }
+
+        private function SuggestionUpdate() {
 
         if ($this->get_request_method() != "POST") {
             $this->response('', 406);
@@ -417,7 +489,7 @@ class API extends REST {
         } else
             $this->response('', 204); // "No Content" status
     }
-
+    
     private function Proposer() {
         if ($this->get_request_method() != "GET") {
             $this->response('', 406);
@@ -434,19 +506,18 @@ class API extends REST {
         $this->response('', 204); // If no records "No Content" status
     }
 
-    
-        private function StatusbyModule() {
+    private function StatusbyModule() {
         if ($this->get_request_method() != "GET") {
             $this->response('', 406);
         }
         $ModuleId = (int) $this->_request['ModuleId'];
-        if($ModuleId== Null || $ModuleId== 0 || $ModuleId == "" || $ModuleId == ""){
-             // $query = "SELECT *FROM status";
-        }else{
-              $query = "SELECT *FROM status WHERE ModuleStatusId =".$ModuleId;
+        if ($ModuleId == Null || $ModuleId == 0 || $ModuleId == "" || $ModuleId == "") {
+            // $query = "SELECT *FROM status";
+        } else {
+            $query = "SELECT *FROM status WHERE ModuleStatusId =" . $ModuleId;
         }
-        
-      
+
+
         $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
 
         if ($r->num_rows > 0) {
@@ -458,6 +529,7 @@ class API extends REST {
         }
         $this->response('', 204); // If no records "No Content" status
     }
+
     /*
      * 	Encode array into JSON
      */
