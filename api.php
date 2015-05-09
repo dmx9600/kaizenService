@@ -273,6 +273,34 @@ class API extends REST {
         } else
             $this->response('', 204); //"No Content" status
     }
+    
+     private function KiazanInsert() {
+
+        if ($this->get_request_method() != "POST") {
+            $this->response('', 406);
+        }
+        $KiazanInObj = json_decode(file_get_contents("php://input"), true);
+        $column_names = array('KaizanNo', 'Date', 'ProposerId', 'ResponsibleId', 'KaizenStatusId', 'Suggestion', 'DepartmentId', 'BenefitsId', 'CostSaving', 'TimeImprovement', 'Comment');
+        $keys = array_keys($KiazanInObj);
+        $columns = '';
+        $values = '';
+        foreach ($column_names as $desired_key) { // Check the customer received. If blank insert blank into the array.
+            if (!in_array($desired_key, $keys)) {
+                $$desired_key = '';
+            } else {
+                $$desired_key = $KiazanInObj[$desired_key];
+            }
+            $columns = $columns . $desired_key . ',';
+            $values = $values . "'" . $$desired_key . "',";
+        }
+        $query = "INSERT INTO kaizen(" . trim($columns, ',') . ") VALUES(" . trim($values, ',') . ")";
+        if (!empty($KiazanInObj)) {
+            $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+            $success = array('status' => "Success", "msg" => "Kaizen  Record Created Successfully.", "data" => $KiazanInObj);
+            $this->response($this->json($success), 200);
+        } else
+            $this->response('', 204); //"No Content" status
+    }
 
     private function KiazanCout() {
         if ($this->get_request_method() != "GET") {
@@ -310,33 +338,26 @@ class API extends REST {
         $this->response('', 204); // If no records "No Content" status
     }
 
-    private function KiazanInsert() {
+    
+        private function KaizenApproval() {
 
         if ($this->get_request_method() != "POST") {
             $this->response('', 406);
         }
-        $kiazan = json_decode(file_get_contents("php://input"), true);
-        $column_names = array('KaizanNo', 'Date', 'ProposerId   ', 'ResponsibleId', 'KaizenStatusId', 'Suggestion', 'DepartmentId', 'BenefitsId', 'CostSaving', 'TimeImprovement', 'Comment');
-        $keys = array_keys($kiazan);
-        $columns = '';
-        $values = '';
-        foreach ($column_names as $desired_key) { // Check the customer received. If blank insert blank into the array.
-            if (!in_array($desired_key, $keys)) {
-                $$desired_key = '';
-            } else {
-                $$desired_key = $kiazan[$desired_key];
-            }
-            $columns = $columns . $desired_key . ',';
-            $values = $values . "'" . $$desired_key . "',";
-        }
-        $query = "INSERT INTO kaizen(" . trim($columns, ',') . ") VALUES(" . trim($values, ',') . ")";
-        if (!empty($kiazan)) {
+        $suggestion = json_decode(file_get_contents("php://input"), true);
+        
+        $id = (int) $suggestion['Id'];
+        $approval = (int) $suggestion['Approval'];
+        $query = "UPDATE kaizen SET KaizenStatusId = $approval WHERE Id=$id";
+        if (!empty($suggestion)) {
             $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
-            $success = array('status' => "Success", "msg" => "Kaizen Count Record Created Successfully.", "data" => $kiazan);
+            $success = array('status' => "Success", "msg" => "KaizenS Status " . $id . " Updated Successfully.", "data" => $suggestion);
             $this->response($this->json($success), 200);
         } else
-            $this->response('', 204); //"No Content" status
+            $this->response('', 204); // "No Content" status
     }
+    
+    
 
     private function BenefitsInsert() {
 
@@ -344,7 +365,7 @@ class API extends REST {
             $this->response('', 406);
         }
         $benefits = json_decode(file_get_contents("php://input"), true);
-        $column_names = array('Safety', 'Quality', 'Delivery   ', 'Cost', 'Morale', 'Environment', '6S', 'Productivity');
+        $column_names = array('Safety', 'Quality', 'Delivery', 'Cost', 'Morale', 'Environment', 'S6', 'Productivity');
         $keys = array_keys($benefits);
         $columns = '';
         $values = '';
@@ -360,8 +381,20 @@ class API extends REST {
         $query = "INSERT INTO benefits(" . trim($columns, ',') . ") VALUES(" . trim($values, ',') . ")";
         if (!empty($benefits)) {
             $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
-            $success = array('status' => "Success", "msg" => "Kaizen Count Record Created Successfully.", "data" => $benefits);
-            $this->response($this->json($success), 200);
+          //  $success = array('status' => "Success", "msg" => "Kaizen Count Record Created Successfully.", "data" => $benefits);
+           // $this->response($this->json($success), 200);
+             $query = "SELECT MAX(Id) as max FROM benefits";
+        $r = $this->mysqli->query($query) or die($this->mysqli->error . __LINE__);
+
+        if ($r->num_rows > 0) {
+            $result = array();
+            while ($row = $r->fetch_assoc()) {
+                $result[] = $row;
+            }
+
+            $this->response($this->json($result), 200); // send user details
+        }
+            
         } else
             $this->response('', 204); //"No Content" status
     }
@@ -400,6 +433,8 @@ class API extends REST {
         }
         // $this->response('', 204); // If no records "No Content" status
     }
+    
+    
 
     private function Suggestion() {
         if ($this->get_request_method() != "GET") {
@@ -432,6 +467,8 @@ class API extends REST {
         }
         $this->response('', 204); // If no records "No Content" status
     }
+    
+    
 
     private function SuggestionInsert() {
         if ($this->get_request_method() != "POST") {
